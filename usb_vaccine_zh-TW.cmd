@@ -14,7 +14,7 @@ ENDLOCAL
 SETLOCAL EnableExtensions EnableDelayedExpansion
 
 REM ---------------------------------------------------------------------------
-REM 'usb_vaccine.cmd' version 3 beta zh-TW (2017-06-30)
+REM 'usb_vaccine.cmd' version 3 beta zh-TW (2017-07-24)
 REM Copyright (C) 2013-2017 Kang-Che Sung <explorer09 @ gmail.com>
 
 REM This program is free software; you can redistribute it and/or
@@ -1282,13 +1282,24 @@ REM   themselves rather than link targets.
 
 REM Clears hidden and system attributes of all files in current directory.
 :clear_files_attrib
+    REM "%%~af" would expand before executing 'attrib', so use another FOR to
+    REM retrieve the outcome.
     SETLOCAL DisableDelayedExpansion
     FOR %FOR_OPTS_FOR_DIR_B% %%f IN ('DIR /A:HS-L /B 2^>NUL:') DO (
         SET "name=%%f"
         CALL :is_file_to_skip_NDE HS_ATTRIB
         IF ERRORLEVEL 1 (
-            ECHO 解除隱藏+系統屬性 "%%f"
             attrib -H -S "%%f"
+            FOR %%I IN ("%%f") DO (
+                SETLOCAL EnableDelayedExpansion
+                CALL :has_ci_substr "%%~aI" "h" "s"
+                IF ERRORLEVEL 1 (
+                    ECHO 已解除 "%%~f" 的隱藏+系統屬性。
+                ) ELSE (
+                    ECHO 無法解除 "%%~f" 的隱藏+系統屬性。>&2
+                )
+                ENDLOCAL
+            )
         ) ELSE (
             ECHO 為了安全原因，跳過檔案 "%%f"（隱藏+系統屬性!BIG5_A15E!
         )
@@ -1297,8 +1308,17 @@ REM Clears hidden and system attributes of all files in current directory.
         SET "name=%%f"
         CALL :is_file_to_skip_NDE H_ATTRIB
         IF ERRORLEVEL 1 (
-            ECHO 解除隱藏屬性 "%%f"
             attrib -H "%%f"
+            FOR %%I IN ("%%f") DO (
+                SETLOCAL EnableDelayedExpansion
+                CALL :has_ci_substr "%%~aI" "h"
+                IF ERRORLEVEL 1 (
+                    ECHO 已解除 "%%~f" 的隱藏屬性。
+                ) ELSE (
+                    ECHO 無法解除 "%%~f" 的隱藏屬性。>&2
+                )
+                ENDLOCAL
+            )
         ) ELSE (
             ECHO 為了安全原因，跳過檔案 "%%f"（隱藏屬性!BIG5_A15E!
         )
@@ -1307,8 +1327,17 @@ REM Clears hidden and system attributes of all files in current directory.
         SET "name=%%f"
         CALL :is_file_to_skip_NDE S_ATTRIB
         IF ERRORLEVEL 1 (
-            ECHO 解除系統屬性 "%%f"
             attrib -S "%%f"
+            FOR %%I IN ("%%f") DO (
+                SETLOCAL EnableDelayedExpansion
+                CALL :has_ci_substr "%%~aI" "s"
+                IF ERRORLEVEL 1 (
+                    ECHO 已解除 "%%~f" 的系統屬性。
+                ) ELSE (
+                    ECHO 無法解除 "%%~f" 的系統屬性。>&2
+                )
+                ENDLOCAL
+            )
         ) ELSE (
             ECHO 為了安全原因，跳過檔案 "%%f"（系統屬性!BIG5_A15E!
         )
